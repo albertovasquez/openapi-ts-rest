@@ -17,12 +17,21 @@ import {
 } from "./lib/ts.js";
 import { AstTsWriter } from "./lib/utils.js";
 
+type GenerateContractArgs = {
+  omit?: string[];
+};
+
 export interface GenerateContractOptions {
+  /**
+   * The directory to write the generated code to.
+   */
+  args?: GenerateContractArgs;
   /**
    * The OpenAPI schema to generate the ts-rest contract from.
    * It can be either an OpenAPI schema object or a URL to an OpenAPI schema.
    */
   openApi: OpenAPIObject | string;
+
   /**
    * The Prettier configuration to use for formatting the generated code.
    */
@@ -34,6 +43,7 @@ export interface GenerateContractOptions {
  * @param {generateContractOptions} options - The options for the generation.
  */
 export async function generateContract({
+  args,
   openApi,
   prettierConfig,
 }: GenerateContractOptions): Promise<string> {
@@ -84,8 +94,9 @@ export async function generateContract({
   }
 
   const tsRestAstContracts = ctx.apiOperationObjects.map((operationObject) =>
-    apiOperationToAstTsRestContract(operationObject, ctx)
-  );
+      apiOperationToAstTsRestContract(operationObject, ctx)
+    )
+    .filter((contract) => !args?.omit?.includes(contract[0]));
 
   // export const contract = c.router({ ... });
   ast.add(
